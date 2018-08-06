@@ -18,17 +18,11 @@ In this lab we'll use a Docker EE cluster. You will have an environment that is 
 
 > * [Task 1: Configure the Docker EE Cluster](#task1)
 >   * [Task 1.1: Accessing PWD](#task1.1)
->   * [Task 1.2: Install a Windows worker node](#task1.2)
->   * [Task 1.3: Create Three Repositories](#task1.3)
+>   * [Task 1.2: Create Three Repositories](#task1.3)
 > * [Task 2: Deploy a Java Web App](#task2)
 >   * [Task 2.1: Clone the Demo Repo](#task2.1)
 >   * [Task 2.2: Build and Push the Linux Web App Image](#task2.2)
 >   * [Task 2.3: Deploy the Web App using UCP](#task2.3)
-> * [Task 3: Deploy the next version with a Windows node](#task3)
->   * [Task 3.1: Clone the repository](#task3.1)
->   * [Task 3.2: Build and Push Your Java Images to Docker Trusted Registry](#task3.2)
->   * [Task 3.3: Deploy the Java web app with Universal Control Plane](#task3.3)
->   * [Task 3.4: Deploy the Windows .NET App](#task3.4)
 > * [Task 4: Deploy to Kubernetes](#task4)
 >   * [Task 4.1: Build .NET Core app instead of .NET](#task4.1)
 >   * [Task 4.2: Examine the Docker Compose File](#task4.2)
@@ -111,61 +105,8 @@ The Play with Docker (PWD) environment is almost completely set up, but before w
 
 	It may take a few minutes to provision out your PWD environment. After this step completes, you'll be ready to move on to task 1.2: Install a Windows worker node
 
-### <a name="task1.2"></a>Task 1.2: Join a Windows worker node
 
-Let's start by adding our 3rd node to the cluster, a Windows Server 2016 worker node. This is done using Docker Swarm.
-
-1. From the main PWD screen click the `UCP` button on the left side of the screen
-
-	> **Note**: Because this is a lab-based install of Docker EE we are using the default self-signed certs. Because of this your browser may display a security warning. It is safe to click through this warning.
-	>
-	> In a production environment you would use certs from a trusted certificate authority and would not see this screen.
-	>
-	> ![](./images/ssl_error.png)
-
-2. When prompted enter your username and password (these can be found below the console window in the main PWD screen). The UCP web interface should load up in your web browser.
-
-	> **Note**: Once the main UCP screen loads you'll notice there is a red warning bar displayed at the top of the UCP screen, this is an artifact of running in a lab environment. A UCP server configured for a production environment would not display this warning
-	>
-	> ![](./images/red_warning.png)
-
-
-3. From the main dashboard screen, click `Add a Node` on the bottom left of the screen
-
-	![](./images/add_a_node.png)
-
-4. Select node type "Windows", check the box, that you followed the instructions and copy the text from the dark box shown on the `Add Node` screen. Don't select a custom listen or advertise address.
-
-	> **Note** There is an icon in the upper right corner of the box that you can click to copy the text to your clipboard
-
-	> ![](./images/join_text.png)
-
-
-	> **Note**: You may notice that there is a UI component to select `Linux` or `Windows`on the `Add Node` screen. In a production environment where you are starting from scratch there are [a few prerequisite steps](https://docs.docker.com/install/windows/docker-ee/) to adding a Windows node. However, we've already done these steps in the PWD environment. So for this lab, just leave the selection on `Linux` and move on to step 2
-
-	![](./images/windows75.png)
-
-5. Switch back to the PWD interface, and click the name of your Windows node. This will connect the web-based console to your Windows Server 2016 Docker EE host.
-
-6. Paste the text from Step 4 at the command prompt in the Windows console. (depending on your browser, this can be tricky: try the "paste" command from the edit menu instead of right clicking or using keyboard shortcuts)
-
-	You should see the message `This node joined a swarm as a worker.` indicating you've successfully joined the node to the cluster.
-
-7. Switch back to the UCP server in your web browser and click the `x` in the upper right corner to close the `Add Node` window
-
-8. You will be taken back to the UCP Dashboard. In the left menu bar, click Shared Resources, and select Nodes.
-
-	![](/images/select_nodes.png)
-
-	You should be taken to the `Nodes` screen and will see 4 worker nodes listed at the bottom of your screen.
-
-	Initially the new worker node will be shown with status `down`. After a minute or two, refresh your web browser to ensure that your Windows worker node has come up as `healthy`
-	
-	![](./images/node_listing.png)
-
-Congratulations on adding a Windows node to your UCP cluster. Now you are ready to use the worker in either Swarm or Kubernetes. Next up we'll create a few repositories in Docker Trusted registry.
-
-### <a name="task1.3"></a>Task 1.3: Create Three DTR Repositories
+### <a name="task1.3"></a>Task 1.2: Create Three DTR Repositories
 
 Docker Trusted Registry is a special server designed to store and manage your Docker images. In this lab we're going to create three different Docker images, and push them to DTR. But before we can do that, we need to setup repositories in which those images will reside. Often that would be enough.
 
@@ -461,157 +402,7 @@ You can do that right in the edit box in `UCP` but wanted to make sure you saw t
 
 9. Delete the `java_web` stack.
 
-## <a name="task3"></a>Task 3: Deploy the next version with a Windows node
 
-Now that we've moved the app and updated it, we're going to add in a user sign-in API. For fun, and to show off the cross-platform capabilities of Docker EE, we are going to do it in a Windows container.
-
-> If your workshop organizer requested a Windows only environment, you can skip to <a href="#task4">Task 4</a>.
-
-### <a name="task3.1"></a> Task 3.1: Clone the repository
-
-![](./images/windows75.png)
-
-1. Because this is a Windows container, we have to build it on a Windows host. Switch back to the main Play with Docker page, select the name of the Windows worker. Then clone the repository again onto this host:
-
-	```powershell
-	PS C:\> git clone https://github.com/dockersamples/hybrid-app.git
-	```
-
-2. Set an environment variable for the DTR host name. Much like you did for the Java app, this will make a few step easier. Copy the DTR host name again and create the environment variable. For instance, if your DTR host was `ip172-18-0-17-bajlvkom5emg00eaner0.direct.ee-beta2.play-with-docker.com` you would type:
-
-	```powershell
-	PS C:\> $env:DTR_HOST="ip172-18-0-17-bajlvkom5emg00eaner0.direct.ee-beta2.play-with-docker.com"
-
-### <a name="task3.2"></a> Task 3.2: Build and Push Windows Images to Docker Trusted Registry
-![](./images/windows75.png)
-
-1. CD into the `c:\hybrid-app\netfx-api` directory. 
-
-	> Note you'll see a `dotnet-api` directory as well. Don't use that directory. That's a .NET Core api that runs on Linux. We'll use that later in the Kubernetes section.
-
-	```powershell
-	PS C:\> cd c:\hybrid-app\netfx-api\
-	```
-
-
-2. Use `docker build` to build your Windows image.
-
-	```powershell
-	PS C:\hybrid-app\netfx-api> docker build -t $env:DTR_HOST/dotnet/dotnet_api .
-	```
-> Note the final "." in the above command. The "." is the build context, specifically the current directory. One of the most common mistakes even experienced users make is leaving off the build context.
-
-	> **Note**: Feel free to examine the Dockerfile in this directory if you'd like to see how the image is being built.
-
-	Your output should be similar to what is shown below
-
-	```powershell
-	PS C:\hybrid-app\netfx-api> docker build -t $env:DTR_HOST/dotnet/dotnet_api .
-
-	Sending build context to Docker daemon  415.7kB
-	Step 1/8 : FROM microsoft/iis:windowsservercore-10.0.14393.1715
-	 ---> 590c0c2590e4
-
-	<output snipped>
-
-	Removing intermediate container ab4dfee81c7e
-	Successfully built d74eead7f408
-	Successfully tagged <dtr hostname>/dotnet/dotnet_api:latest
-	```
-
-	> **Note**: It will take a few minutes for your image to build.
-
-4. Log into Docker Trusted Registry
-
-	```powershell
-	PS C:\hybrid-app\netfx-api> docker login $env:DTR_HOST
-	Username: dotnet_user
-	Password: user1234
-	Login Succeeded
-	```
-
-5. Push your new image up to Docker Trusted Registry.
-
-	```powershell
-	PS C:\hybrid-app\netfx-api> docker push $env:DTR_HOST/dotnet/dotnet_api
-	The push refers to a repository [<dtr hostname>/dotnet/dotnet_api]
-	5d08bc106d91: Pushed
-	74b0331584ac: Pushed
-	e95704c2f7ac: Pushed
-	669bd07a2ae7: Pushed
-	d9e5b60d8a47: Pushed
-	8981bfcdaa9c: Pushed
-	25bdce4d7407: Pushed
-	df83d4285da0: Pushed
-	853ea7cd76fb: Pushed
-	55cc5c7b4783: Skipped foreign layer
-	f358be10862c: Skipped foreign layer
-	latest: digest: sha256:e28b556b138e3d407d75122611710d5f53f3df2d2ad4a134dcf7782eb381fa3f size: 2825
-	```
-
-6. You may check your repositories in the DTR web interface to see the newly pushed image.
-
-### <a name="task3.3"></a> Task 3.3: Deploy the Java web app
-![](./images/linux75.png)
-
-1. First we need to update the Java web app so it'll take advantage of the .NET API. Switch back to `worker1` and change directories to the `java-app-v2` directory. Repeat steps 1,2, and 4 from Task 2.2 but add a tag `:2` to your build and pushes:
-
-	```bash
-	$ docker build -t $DTR_HOST/java/java_web:2 .
-	$ docker push $DTR_HOST/java/java_web:2
-	```
-> Note the final "." in the above `docker build` command. The "." is the build context, specifically the current directory. One of the most common mistakes even experienced users make is leaving off the build context.
-
-	This will push a different version of the app, version 2, to the same `java_web` repository.
-
-2. Next repeat the steps 6-8 from Task 2.3, but use this `Compose` file instead:
-
-	```yaml
-    version: "3.3"
-
-    services:
-
-      database:
-        image: <dtr hostname>/java/database
-        # set default mysql root password, change as needed
-        environment:
-          MYSQL_ROOT_PASSWORD: mysql_password
-        # Expose port 3306 to host. 
-        ports:
-          - "3306:3306" 
-        networks:
-          - back-tier
-
-      webserver:
-        image: <dtr hostname>/java/java_web:2
-        ports:
-          - "8080:8080" 
-        networks:
-          - front-tier
-          - back-tier
-        environment:
-          BASEURI: http://dotnet-api/api/users
-
-      dotnet-api:
-        image: <dtr hostname>/dotnet/dotnet_api
-        ports:
-          - "57989:80"
-        networks:
-          - front-tier
-          - back-tier
-
-    networks:
-      back-tier:
-        external: true
-	  front-tier:
-	    external: true
-
-    secrets:
-      mysql_password:
-        external: true
-	```
-
-3. Once tested, delete the stack.
 
 ## <a name="task4"></a>Task 4: Deploy to Kubernetes
 
